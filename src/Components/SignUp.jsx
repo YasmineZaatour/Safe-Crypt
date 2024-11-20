@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import facebook from "../Assets/facebook.png";
 import googleI from "../Assets/googleI.png";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from "../firebase"; 
@@ -24,8 +24,10 @@ const SignUp = () => {
         fullName,
         email,
       });
+      await sendEmailVerification(user);
 
       console.log("User signed up and saved to Firestore!");
+      alert("A verification email has been sent to your email. Please check your inbox.");
       // You can now redirect or show a success message
     } catch (error) {
       setError(error.message); // Handle any errors such as weak password, email in use, etc.
