@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";  
 import { auth } from "../firebase";  
-import facebook from "../Assets/facebook.png";
-import googleI from "../Assets/googleI.png";
 import GoogleAuth from "./GoogleAuth";
+import { useNavigate } from "react-router-dom";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSignIn = async (e) => {
     e.preventDefault();
@@ -17,6 +17,7 @@ const SignIn = () => {
       await signInWithEmailAndPassword(auth, email, password);
       // Redirect user to a different page or show success
       console.log("User signed in!");
+      navigate("/main");
     } catch (error) {
       setError(error.message); // Handle errors (like incorrect password or email not registered)
     }

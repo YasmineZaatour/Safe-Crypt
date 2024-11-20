@@ -1,15 +1,17 @@
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification, signOut } from "firebase/auth";
 import { auth } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from "../firebase"; 
 import GoogleAuth from "./GoogleAuth";
+import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
   const [fullName, setFullName] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -22,11 +24,16 @@ const SignUp = () => {
       await setDoc(doc(db, "users", user.uid), {
         fullName,
         email,
+        emailVerified: false,
       });
       await sendEmailVerification(user);
 
       console.log("User signed up and saved to Firestore!");
-      alert("A verification email has been sent to your email. Please check your inbox.");
+
+      // Sign out the user after sign-up
+      await signOut(auth);
+
+      navigate("/signin");
       // You can now redirect or show a success message
     } catch (error) {
       setError(error.message); // Handle any errors such as weak password, email in use, etc.

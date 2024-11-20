@@ -20,6 +20,7 @@ const GoogleAuth = () => {
             await setDoc(userDocRef, {
               fullName: user.displayName || "Anonymous", // Handle missing display name
               email: user.email,
+              mailVerified: user.emailVerified,
             });
             console.log("New user added to Firestore.");
           } else {
