@@ -3,6 +3,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";  
 import facebook from "../Assets/facebook.png";
 import googleI from "../Assets/googleI.png";
+import GoogleAuth from "./GoogleAuth";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -51,18 +52,7 @@ const SignIn = () => {
         <hr className="flex-1 border-none h-px bg-white" />
       </div>
 
-      <div className="flex justify-center my-[18px] icons">
-        <img
-          className="w-[70px] h-[41px] mr-[4px] facebook-icon"
-          src={facebook}
-          alt="Facebook logo"
-        />
-        <img
-          className="w-[38px] h-[40px] mr-[6px] google-icon"
-          src={googleI}
-          alt="Google logo"
-        />
-      </div>
+      <GoogleAuth />
       
       <button
         className="w-[380px] h-12 bg-customBlue rounded-lg border-none text-white text-lg font-bold mt-[3px] signIn-btn"

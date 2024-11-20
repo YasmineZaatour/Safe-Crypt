@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import facebook from "../Assets/facebook.png";
-import googleI from "../Assets/googleI.png";
 import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { auth } from "../firebase";
 import { setDoc, doc } from "firebase/firestore";
 import { db } from "../firebase"; 
+import GoogleAuth from "./GoogleAuth";
 
 const SignUp = () => {
   const [fullName, setFullName] = useState(""); 
@@ -35,7 +34,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="w-[522px] h-[640px] mt-32 ml-[600px] p-5 bg-cyan text-center rounded-lg signUpContainer">
+    <div className="w-[522px] h-[600px] mt-32 ml-[600px] p-5 bg-cyan text-center rounded-[15px] signUpContainer">
       <h2 className="text-white text-[40px] mb-[50px]">Register</h2>
       <p className="text-white text-[20px] mb-[10px] font-semibold">Add all information</p>
       
@@ -70,18 +69,7 @@ const SignUp = () => {
           <hr className="flex-1 border-none h-px bg-white" />
         </div>
         
-        <div className="flex justify-center mt-[20px] mb-[40px] icons">
-          <img
-            className="w-[70px] h-[40px] mr-[4px] facebook-icon"
-            src={facebook}
-            alt="Facebook logo"
-          />
-          <img
-            className="w-[38px] h-[39px] mr-[6px] google-icon"
-            src={googleI}
-            alt="Google logo"
-          />
-        </div>
+        <GoogleAuth />
         
         <button
           type="submit"
