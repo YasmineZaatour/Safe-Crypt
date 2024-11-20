@@ -10,6 +10,7 @@ const SignUp = () => {
   const [fullName, setFullName] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -24,6 +25,7 @@ const SignUp = () => {
       await setDoc(doc(db, "users", user.uid), {
         fullName,
         email,
+        phoneNumber,
         emailVerified: false,
       });
       await sendEmailVerification(user);
@@ -41,7 +43,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="w-[522px] h-[600px] mt-32 ml-[600px] p-5 bg-cyan text-center rounded-[15px] signUpContainer">
+    <div className="w-[522px] h-[650px] mt-32 ml-[600px] p-5 bg-cyan text-center rounded-[15px] signUpContainer">
       <h2 className="text-white text-[40px] mb-[50px]">Register</h2>
       <p className="text-white text-[20px] mb-[10px] font-semibold">Add all information</p>
       
@@ -66,6 +68,13 @@ const SignUp = () => {
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+        />
+        <input
+          className="block w-[380px] h-[45px] rounded-lg mb-4 border-none mx-auto px-3 text-black"
+          type="tel"
+          placeholder="Phone Number"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
         />
         
         {error && <p className="text-red-500 text-sm">{error}</p>}
