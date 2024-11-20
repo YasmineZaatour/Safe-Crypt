@@ -19,9 +19,6 @@ const SignIn = () => {
           type="password"
           placeholder="Password"
         />
-        <div className="text-white text-sm text-right mr-[50px] ">
-        Forgot your password ?
-        </div>
       </div>
       <div className="flex items-center text-white mx-[50px] my-55 signIn-divider">
         <hr className="flex-1 border-none h-px bg-white" />
