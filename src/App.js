@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import SignUp from "./Components/SignUp";
 import SignIn from "./Components/SignIn";
 import MainPage from "./Components/MainPage";
@@ -9,20 +14,21 @@ import { db } from "./firebase";
 
 const App = () => {
   const [user, setUser] = useState(null);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false); // Track phone verification status
 
   // Monitor authentication state
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (currentUser) => {
       if (currentUser) {
-        // Reload the user to get the latest email verification status
-        await currentUser.reload();
+        console.log("User authenticated:", currentUser);
+        await currentUser.reload(); // Ensure the latest user data
         const updatedUser = auth.currentUser;
+        console.log("Email Verified:", updatedUser.emailVerified); // Track email verification
+        console.log("User:", updatedUser);
 
         setUser(updatedUser);
 
-        // Check if the email is verified
         if (updatedUser.emailVerified) {
-          // Update Firestore to reflect that the email is verified
           const userDocRef = doc(db, "users", updatedUser.uid);
           await updateDoc(userDocRef, {
             emailVerified: true,
@@ -39,12 +45,32 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        {/* Redirect root path to /signin */}
+        <Route path="/" element={<Navigate to="/signin" />} />
         {/* Sign-Up Page */}
-        <Route path="/" element={<SignUp />} />
+        <Route path="/signup" element={<SignUp />} />
         {/* Sign-In Page */}
-        <Route path="/signin" element={user ? <Navigate to="/main" /> : <SignIn />} />
+        <Route
+          path="/signin"
+          element={
+            user ? (
+              isPhoneVerified ? (
+                <Navigate to="/main" />
+              ) : (
+                <SignIn setIsPhoneVerified={setIsPhoneVerified} />
+              )
+            ) : (
+              <SignIn setIsPhoneVerified={setIsPhoneVerified} />
+            )
+          }
+        />
         {/* Main Page */}
-        <Route path="/main" element={user ? <MainPage /> : <Navigate to="/signin" />} />
+        <Route
+          path="/main"
+          element={
+            user && isPhoneVerified ? <MainPage /> : <Navigate to="/signin" />
+          }
+        />
       </Routes>
     </Router>
   );

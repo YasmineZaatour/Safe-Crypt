@@ -1,5 +1,9 @@
 import React, { useState } from "react";
-import { signInWithEmailAndPassword, RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+} from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
 import GoogleAuth from "./GoogleAuth";
@@ -9,33 +13,56 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [isPhoneVerification, setIsPhoneVerification] = useState(false); // Toggle phone number verification
+  const [isPhoneVerification, setIsPhoneVerification] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [isPhoneVerified, setIsPhoneVerified] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Initialize reCAPTCHA verifier
   const setupRecaptcha = () => {
-    window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
-      size: 'invisible', // Invisible reCAPTCHA
-      callback: (response) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-        console.log("reCAPTCHA verified successfully");
-      },
-    }, auth);
+    try {
+      console.log("Setting up reCAPTCHA...");
+
+      // Ensure that recaptchaVerifier is not already set up
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(
+          "recaptcha-container", // The HTML element that will contain the reCAPTCHA
+          {
+            size: "invisible", // Invisible reCAPTCHA
+            callback: (response) => {
+              console.log("reCAPTCHA verified successfully");
+            },
+          },
+          auth // Ensure auth is correctly passed here
+        );
+        window.recaptchaVerifier
+          .render()
+          .then(() => {
+            console.log("reCAPTCHA setup complete");
+          })
+          .catch((error) => {
+            setError(error.message);
+            console.error("Error rendering reCAPTCHA:", error.message);
+          });
+      }
+    } catch (error) {
+      setError(error.message);
+      console.error("Error setting up reCAPTCHA:", error.message);
+    }
   };
 
   // Handle email and password sign-in
   const handleSignIn = async (e) => {
     e.preventDefault();
     try {
-      // Sign in with email and password
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Proceed to phone verification if MFA is enabled
-      setIsPhoneVerification(true);
-      setupRecaptcha(); // Set up reCAPTCHA for phone number verification
-
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      setIsEmailVerified(true); // Email sign-in successful
+      setupRecaptcha(); // Initialize reCAPTCHA for phone verification
+      setIsPhoneVerification(true); // Show phone verification UI
     } catch (error) {
       setError(error.message);
       console.error("Error during sign-in:", error.message);
@@ -45,10 +72,22 @@ const SignIn = () => {
   // Handle phone number verification
   const handlePhoneVerification = async () => {
     const appVerifier = window.recaptchaVerifier;
-
-    // Send verification code to the entered phone number
     try {
-      const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+      // Ensure phone number is correctly formatted with the country code (+216)
+      let formattedPhoneNumber = phoneNumber;
+
+      // If the phone number doesn't start with '+216', add the country code
+      if (!formattedPhoneNumber.startsWith("+216")) {
+        formattedPhoneNumber = `+216${formattedPhoneNumber.replace(/^\+/, "")}`;
+      }
+
+      console.log("Phone Number to verify:", formattedPhoneNumber); // Log the phone number being verified
+
+      const confirmationResult = await signInWithPhoneNumber(
+        auth,
+        formattedPhoneNumber,
+        appVerifier
+      );
       window.confirmationResult = confirmationResult;
       console.log("Verification code sent!");
     } catch (error) {
@@ -61,10 +100,12 @@ const SignIn = () => {
   const handleVerifyCode = async () => {
     const confirmationResult = window.confirmationResult;
     try {
-      // Verify the entered verification code
       await confirmationResult.confirm(verificationCode);
       console.log("Phone number verified!");
-      navigate("/main"); // Redirect to main page after successful verification
+      setIsPhoneVerified(true); // Mark phone verification as successful
+      if (isEmailVerified) {
+        navigate("/main");
+      }
     } catch (error) {
       setError(error.message);
       console.error("Error verifying code:", error.message);
@@ -77,6 +118,7 @@ const SignIn = () => {
       <p className="text-white text-[20px] mb-[10px] font-semibold">
         Enter your e-mail and password
       </p>
+
       {!isPhoneVerification ? (
         <form onSubmit={handleSignIn}>
           <input
@@ -111,7 +153,7 @@ const SignIn = () => {
         </form>
       ) : (
         <div>
-          <div id="recaptcha-container"></div> {/* Invisible reCAPTCHA */}
+          <div id="recaptcha-container"></div>
           <input
             className="block w-[380px] h-[45px] rounded-lg mb-5 border-white mx-auto px-3 py-2 mt-2 text-black"
             type="tel"
@@ -126,7 +168,6 @@ const SignIn = () => {
           >
             Send Code
           </button>
-
           <input
             className="block w-[380px] h-[45px] rounded-lg mb-5 border-white mx-auto px-3 py-2 mt-2 text-black"
             type="text"
