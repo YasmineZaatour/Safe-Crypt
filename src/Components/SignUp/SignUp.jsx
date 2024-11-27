@@ -1,8 +1,8 @@
-// src/Components/SignUp/SignUp.jsx
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../../firebase';
 import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { useNavigate } from 'react-router-dom';
 import './SignUp.css';
 
 const SignUp = () => {
@@ -12,6 +12,8 @@ const SignUp = () => {
     password: '',
     confirmPassword: ''
   });
+
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const handleChange = (e) => {
     setFormData({
@@ -35,7 +37,9 @@ const SignUp = () => {
         email: formData.email,
         role: 'user' // Default role
       });
-      alert("User registered successfully");
+
+      // Navigate to Sign-In page after successful sign-up
+      navigate("/signin");
     } catch (error) {
       alert(error.message);
     }
