@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './EncryptionInterface.css';
 import { motion } from 'framer-motion';
 import CryptoJS from 'crypto-js';
+import { auth, db } from '../../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const EncryptionInterface = () => {
   const [message, setMessage] = useState('');
@@ -32,7 +34,24 @@ const EncryptionInterface = () => {
     }).join('');
   };
 
-  const handleSubmit = (e) => {
+  const logEncryptionOperation = async (operation, algorithm) => {
+    try {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      await addDoc(collection(db, 'encryptionLogs'), {
+        userId: user.uid,
+        timestamp: serverTimestamp(),
+        operation: operation, // 'encrypt' or 'decrypt'
+        algorithm: algorithm, // 'aes' or 'caesar'
+        success: true
+      });
+    } catch (error) {
+      console.error('Error logging operation:', error);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     let processedMessage = '';
 
@@ -84,14 +103,30 @@ const EncryptionInterface = () => {
             processedMessage = 'Decryption failed. Please check your key and input.';
           }
         }
+
+        // Log the operation after successful encryption/decryption
+        await logEncryptionOperation(
+          isEncrypting ? 'encrypt' : 'decrypt',
+          'aes'
+        );
       } catch (error) {
         processedMessage = 'Operation failed. Please check your inputs.';
       }
     } else if (encryptionType === 'caesar') {
-      const shift = parseInt(key, 10);
-      processedMessage = isEncrypting 
-        ? caesarCipherEncrypt(message, shift)
-        : caesarCipherDecrypt(message, shift);
+      try {
+        const shift = parseInt(key, 10);
+        processedMessage = isEncrypting 
+          ? caesarCipherEncrypt(message, shift)
+          : caesarCipherDecrypt(message, shift);
+          
+        // Log the operation after successful encryption/decryption
+        await logEncryptionOperation(
+          isEncrypting ? 'encrypt' : 'decrypt',
+          'caesar'
+        );
+      } catch (error) {
+        processedMessage = 'Operation failed. Please check your inputs.';
+      }
     }
 
     setResult(processedMessage);
