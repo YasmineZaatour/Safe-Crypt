@@ -1,0 +1,122 @@
+
+.encryption-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  }
+  
+  .encryption-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+  }
+  
+  .mode-toggle {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    background: #f0f0f0;
+    padding: 0.5rem;
+    border-radius: 12px;
+  }
+  
+  .mode-toggle button {
+    flex: 1;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .mode-toggle button.active {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .algorithm-selection {
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  
+  .algorithm-selection select {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+  }
+  
+  .input-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  textarea, input {
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+  }
+  
+  textarea {
+    min-height: 150px;
+    resize: vertical;
+  }
+  
+  textarea:focus, input:focus {
+    outline: none;
+    border-color: #4a90e2;
+  }
+  
+  .submit-button {
+    width: 100%;
+    padding: 1rem;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  
+  .result-container {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+  }
+  
+  .result-box {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 12px;
+    position: relative;
+  }
+  
+  .copy-button {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .copy-button:hover {
+    background: #4a90e2;
+    color: white;
+    border-color: #4a90e2;
+  }
