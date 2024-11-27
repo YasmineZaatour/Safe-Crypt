@@ -33,7 +33,7 @@
 
 .signin-form input[type="email"],
 .signin-form input[type="password"] {
-  width: 100%;
+  width: 372px;
   padding: 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
