@@ -30,11 +30,19 @@ const SignIn = () => {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
       
+      if (userData.status === 'inactive') {
+        setError('Your account is inactive. Please contact an administrator to reactivate it.');
+        await auth.signOut();
+        return;
+      }
+      
       if (userData.role === 'admin') {
         navigate('/admin-dashboard');
       } else if (!userData.verified) {
         setError('Your account is pending verification. Please wait for an administrator to verify your account.');
       } else {
+        // Store user status in localStorage for the EncryptionInterface to check
+        localStorage.setItem('userStatus', userData.status);
         navigate('/encryption-interface');
       }
     } catch (error) {

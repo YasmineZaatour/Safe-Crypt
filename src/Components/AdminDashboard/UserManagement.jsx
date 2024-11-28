@@ -86,6 +86,18 @@ const UserManagement = () => {
     }
   };
 
+  const handleUpdateUserStatus = async (userId, newStatus) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        status: newStatus
+      });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      alert('Error updating user status: ' + error.message);
+    }
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -127,7 +139,17 @@ const UserManagement = () => {
                     <MenuItem value="user">User</MenuItem>
                   </Select>
                 </TableCell>
-                <TableCell>{user.status}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.status || 'active'}
+                    size="small"
+                    onChange={(e) => handleUpdateUserStatus(user.id, e.target.value)}
+                  >
+                    <MenuItem value="active">Active</MenuItem>
+                    <MenuItem value="suspended">Suspended</MenuItem>
+                    <MenuItem value="inactive">Inactive</MenuItem>
+                  </Select>
+                </TableCell>
                 <TableCell>
                   <Button
                     variant={user.verified ? "contained" : "outlined"}

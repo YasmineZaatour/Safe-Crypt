@@ -12,6 +12,7 @@ const EncryptionInterface = () => {
   const [encryptionType, setEncryptionType] = useState('aes');
   const [aesType, setAesType] = useState('128');
   const [isEncrypting, setIsEncrypting] = useState(true);
+  const [isSuspended] = useState(localStorage.getItem('userStatus') === 'suspended');
 
   const caesarCipherEncrypt = (text, shift) => {
     return Array.from(text).map(char => {
@@ -53,6 +54,10 @@ const EncryptionInterface = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSuspended) {
+      setResult('Your account is suspended. Operation not allowed.');
+      return;
+    }
     let processedMessage = '';
 
     if (encryptionType === 'aes') {
@@ -139,17 +144,32 @@ const EncryptionInterface = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+      {isSuspended && (
+        <div className="suspension-notice" style={{
+          backgroundColor: '#fff3cd',
+          color: '#856404',
+          padding: '1rem',
+          marginBottom: '1rem',
+          borderRadius: '4px',
+          textAlign: 'center'
+        }}>
+          Your account is suspended. You can view the interface but cannot perform operations.
+        </div>
+      )}
+
       <div className="encryption-card">
         <div className="mode-toggle">
           <button 
             className={isEncrypting ? 'active' : ''}
-            onClick={() => setIsEncrypting(true)}
+            onClick={() => !isSuspended && setIsEncrypting(true)}
+            disabled={isSuspended}
           >
             Encrypt
           </button>
           <button 
             className={!isEncrypting ? 'active' : ''}
-            onClick={() => setIsEncrypting(false)}
+            onClick={() => !isSuspended && setIsEncrypting(false)}
+            disabled={isSuspended}
           >
             Decrypt
           </button>
@@ -161,6 +181,7 @@ const EncryptionInterface = () => {
             <select 
               value={encryptionType}
               onChange={(e) => setEncryptionType(e.target.value)}
+              disabled={isSuspended}
             >
               <option value="aes">AES</option>
               <option value="caesar">Caesar Cipher</option>
@@ -170,6 +191,7 @@ const EncryptionInterface = () => {
               <select 
                 value={aesType}
                 onChange={(e) => setAesType(e.target.value)}
+                disabled={isSuspended}
               >
                 <option value="128">128 bits</option>
                 <option value="192">192 bits</option>
@@ -185,9 +207,10 @@ const EncryptionInterface = () => {
             transition={{ delay: 0.2 }}
           >
             <textarea
-              placeholder="Enter your message here..."
+              placeholder={isSuspended ? "Operations disabled - Account suspended" : "Enter your message here..."}
               value={message}
-              onChange={(e) => setMessage(e.target.value)}
+              onChange={(e) => !isSuspended && setMessage(e.target.value)}
+              disabled={isSuspended}
               required
             />
           </motion.div>
@@ -204,6 +227,7 @@ const EncryptionInterface = () => {
                 placeholder="Enter encryption key"
                 value={key}
                 onChange={(e) => setKey(e.target.value)}
+                disabled={isSuspended}
                 required
               />
             </motion.div>
@@ -212,8 +236,10 @@ const EncryptionInterface = () => {
           <motion.button 
             type="submit"
             className="submit-button"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={!isSuspended ? { scale: 1.02 } : {}}
+            whileTap={!isSuspended ? { scale: 0.98 } : {}}
+            disabled={isSuspended}
+            style={isSuspended ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             {isEncrypting ? 'Encrypt' : 'Decrypt'}
           </motion.button>
