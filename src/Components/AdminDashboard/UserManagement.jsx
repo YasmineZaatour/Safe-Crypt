@@ -108,6 +108,7 @@ const UserManagement = () => {
               <TableCell>Email</TableCell>
               <TableCell>Role</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Verified</TableCell>
               <TableCell>Last Login</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -127,6 +128,21 @@ const UserManagement = () => {
                   </Select>
                 </TableCell>
                 <TableCell>{user.status}</TableCell>
+                <TableCell>
+                  <Button
+                    variant={user.verified ? "contained" : "outlined"}
+                    color={user.verified ? "success" : "warning"}
+                    size="small"
+                    onClick={async () => {
+                      await updateDoc(doc(db, 'users', user.id), {
+                        verified: !user.verified
+                      });
+                      fetchUsers();
+                    }}
+                  >
+                    {user.verified ? "Verified" : "Verify User"}
+                  </Button>
+                </TableCell>
                 <TableCell>{user.lastLogin}</TableCell>
                 <TableCell>
                   <Button 

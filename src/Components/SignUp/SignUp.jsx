@@ -35,10 +35,11 @@ const SignUp = () => {
       await setDoc(doc(db, "users", user.uid), {
         fullName: formData.fullName,
         email: formData.email,
-        role: 'user' // Default role
+        role: 'user',
+        verified: false, // Add verified status
+        createdAt: new Date()
       });
 
-      // Navigate to Sign-In page after successful sign-up
       navigate("/signin");
     } catch (error) {
       alert(error.message);

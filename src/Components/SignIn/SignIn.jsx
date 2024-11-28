@@ -10,6 +10,7 @@ const SignIn = () => {
     email: '',
     password: ''
   });
+  const [error, setError] = useState('');  // Add error state
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -21,19 +22,23 @@ const SignIn = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(''); // Clear any previous errors
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const db = getFirestore();
       const userDoc = await getDoc(doc(db, "users", user.uid));
       const userData = userDoc.data();
+      
       if (userData.role === 'admin') {
         navigate('/admin-dashboard');
+      } else if (!userData.verified) {
+        setError('Your account is pending verification. Please wait for an administrator to verify your account.');
       } else {
         navigate('/encryption-interface');
       }
     } catch (error) {
-      alert(error.message);
+      setError(error.message);
     }
   };
 
@@ -42,6 +47,18 @@ const SignIn = () => {
       <div className="signin-card">
         <h2>Welcome Back</h2>
         <p>Please sign in to continue</p>
+        
+        {error && (
+          <div className="error-message" style={{
+            color: 'red',
+            backgroundColor: '#ffebee',
+            padding: '10px',
+            borderRadius: '4px',
+            marginBottom: '15px'
+          }}>
+            {error}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="signin-form">
           <div className="form-group">
