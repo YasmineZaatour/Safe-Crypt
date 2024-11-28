@@ -1,23 +1,94 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { collection, query, getDocs, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth, db } from '../../firebase';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Select, MenuItem, FormControl, InputLabel
+  TextField, Select, MenuItem, FormControl, InputLabel, CircularProgress
 } from '@mui/material';
 
 const UserManagement = () => {
-  const [users, setUsers] = useState([
-    { id: 1, email: 'user@example.com', role: 'user', status: 'active', lastLogin: '2024-01-20' }
-    // Add more mock data as needed
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [openDialog, setOpenDialog] = useState(false);
   const [newUser, setNewUser] = useState({ email: '', role: 'user', password: '' });
 
-  const handleAddUser = () => {
-    // Add user logic here
-    setOpenDialog(false);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const usersQuery = query(collection(db, 'users'));
+      const querySnapshot = await getDocs(usersQuery);
+      const usersList = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        lastLogin: doc.data().lastLogin?.toDate()?.toLocaleDateString() || 'Never'
+      }));
+      setUsers(usersList);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleAddUser = async () => {
+    try {
+      // Create authentication user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        newUser.email,
+        newUser.password
+      );
+
+      // Add user to Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email: newUser.email,
+        role: newUser.role,
+        status: 'active',
+        createdAt: new Date()
+      });
+
+      setOpenDialog(false);
+      fetchUsers(); // Refresh user list
+      setNewUser({ email: '', role: 'user', password: '' });
+    } catch (error) {
+      console.error('Error adding user:', error);
+      alert('Error adding user: ' + error.message);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm('Are you sure you want to delete this user?')) {
+      try {
+        await deleteDoc(doc(db, 'users', userId));
+        // Note: This doesn't delete the auth user, only the Firestore document
+        fetchUsers(); // Refresh user list
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user: ' + error.message);
+      }
+    }
+  };
+
+  const handleUpdateUserRole = async (userId, newRole) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: newRole
+      });
+      fetchUsers(); // Refresh user list
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      alert('Error updating user role: ' + error.message);
+    }
+  };
+
+  if (loading) {
+    return <CircularProgress />;
+  }
 
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden' }}>
@@ -34,7 +105,6 @@ const UserManagement = () => {
         <Table stickyHeader>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Role</TableCell>
               <TableCell>Status</TableCell>
@@ -45,14 +115,27 @@ const UserManagement = () => {
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.id}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  <Select
+                    value={user.role}
+                    size="small"
+                    onChange={(e) => handleUpdateUserRole(user.id, e.target.value)}
+                  >
+                    <MenuItem value="admin">Admin</MenuItem>
+                    <MenuItem value="user">User</MenuItem>
+                  </Select>
+                </TableCell>
                 <TableCell>{user.status}</TableCell>
                 <TableCell>{user.lastLogin}</TableCell>
                 <TableCell>
-                  <Button color="error" size="small">Delete</Button>
-                  <Button color="primary" size="small">Edit</Button>
+                  <Button 
+                    color="error" 
+                    size="small"
+                    onClick={() => handleDeleteUser(user.id)}
+                  >
+                    Delete
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
