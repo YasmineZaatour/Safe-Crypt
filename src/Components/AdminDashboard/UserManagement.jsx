@@ -22,11 +22,16 @@ const UserManagement = () => {
     try {
       const usersQuery = query(collection(db, 'users'));
       const querySnapshot = await getDocs(usersQuery);
-      const usersList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        lastLogin: doc.data().lastLogin?.toDate()?.toLocaleDateString() || 'Never'
-      }));
+      const usersList = querySnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          lastLogin: data.lastLogin 
+            ? new Date(data.lastLogin.toDate()).toLocaleString()
+            : 'Never'
+        };
+      });
       setUsers(usersList);
     } catch (error) {
       console.error('Error fetching users:', error);

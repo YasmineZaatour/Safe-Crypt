@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../../firebase';
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import './SignIn.css';
 
 const SignIn = () => {
@@ -27,8 +27,14 @@ const SignIn = () => {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       const db = getFirestore();
-      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
       const userData = userDoc.data();
+      
+      // Update last login timestamp
+      await updateDoc(userDocRef, {
+        lastLogin: serverTimestamp()
+      });
       
       if (userData.status === 'inactive') {
         setError('Your account is inactive. Please contact an administrator to reactivate it.');
