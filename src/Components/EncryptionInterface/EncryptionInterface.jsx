@@ -40,13 +40,20 @@ const EncryptionInterface = () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      await addDoc(collection(db, 'encryptionLogs'), {
+      const logData = {
         userId: user.uid,
         timestamp: serverTimestamp(),
-        operation: operation, // 'encrypt' or 'decrypt'
-        algorithm: algorithm, // 'aes' or 'caesar'
+        operation: operation,
+        algorithm: algorithm,
         success: true
-      });
+      };
+
+      // Add AES type information only for AES operations
+      if (algorithm === 'aes') {
+        logData.aesType = aesType; // Add the selected AES type
+      }
+
+      await addDoc(collection(db, 'encryptionLogs'), logData);
     } catch (error) {
       console.error('Error logging operation:', error);
     }
@@ -112,7 +119,7 @@ const EncryptionInterface = () => {
         // Log the operation after successful encryption/decryption
         await logEncryptionOperation(
           isEncrypting ? 'encrypt' : 'decrypt',
-          'aes'
+          'aes-' + aesType // Change this line to include the AES type
         );
       } catch (error) {
         processedMessage = 'Operation failed. Please check your inputs.';
@@ -254,7 +261,11 @@ const EncryptionInterface = () => {
           >
             <h3>Result:</h3>
             <div className="result-box">
-              <p>{result}</p>
+              <textarea 
+                value={result} 
+                readOnly 
+                rows={result.length > 100 ? 10 : 5} // Adjust rows based on result length
+              />
               <button 
                 className="copy-button"
                 onClick={() => navigator.clipboard.writeText(result)}

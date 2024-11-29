@@ -1,21 +1,34 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import SignIn from "./Components/SignIn/SignIn";
-import SignUp from "./Components/SignUp/SignUp";
-import AdminDashboard from "./Components/AdminDashboard/AdminDashboard";
-import EncryptionInterface from "./Components/EncryptionInterface/EncryptionInterface";
+import { auth } from './firebase';
+import SignIn from "./Components/SignIn/SignIn.jsx";
+import SignUp from "./Components/SignUp/SignUp.jsx";
+import AdminDashboard from "./Components/AdminDashboard/AdminDashboard.jsx";
+import EncryptionInterface from "./Components/EncryptionInterface/EncryptionInterface.jsx";
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      setUser(user);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
-    <Router>
-      <Routes>
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="/encryption-interface" element={<EncryptionInterface />} />
-        <Route path="*" element={<Navigate to="/signin" />} />
-      </Routes>
-    </Router>
+    <div>
+      <Router>
+        <Routes>
+          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/encryption-interface" element={<EncryptionInterface />} />
+          <Route path="*" element={<Navigate to="/signin" />} />
+        </Routes>
+      </Router>
+    </div>
   );
 }
 

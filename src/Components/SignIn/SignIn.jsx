@@ -5,12 +5,16 @@ import { auth } from '../../firebase';
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import './SignIn.css';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+
 const SignIn = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  const [error, setError] = useState('');  // Add error state
+  const [error, setError] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -20,9 +24,32 @@ const SignIn = () => {
     });
   };
 
+  const handleVerifyCode = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${API_URL}/api/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          code: verificationCode
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        navigate('/admin-dashboard');
+      } else {
+        setError(data.error || 'Invalid verification code');
+      }
+    } catch (error) {
+      setError('Verification failed');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear any previous errors
+    setError('');
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
@@ -31,23 +58,49 @@ const SignIn = () => {
       const userDoc = await getDoc(userDocRef);
       const userData = userDoc.data();
       
-      // Update last login timestamp
       await updateDoc(userDocRef, {
         lastLogin: serverTimestamp()
       });
       
       if (userData.status === 'inactive') {
-        setError('Your account is inactive. Please contact an administrator to reactivate it.');
+        setError('Your account is inactive. Please contact an administrator.');
         await auth.signOut();
         return;
       }
       
       if (userData.role === 'admin') {
-        navigate('/admin-dashboard');
+        try {
+          console.log('Sending verification to:', formData.email);
+          const response = await fetch(`${API_URL}/api/send-verification`, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              email: formData.email.trim() 
+            })
+          });
+
+          const data = await response.json();
+          console.log('Server response:', data);
+
+          if (!response.ok) {
+            throw new Error(data.error || `Server error: ${response.status}`);
+          }
+
+          if (data.success) {
+            setShowVerification(true);
+          } else {
+            throw new Error(data.error || 'Verification failed');
+          }
+        } catch (error) {
+          console.error('Verification error:', error);
+          setError(error.message);
+          await auth.signOut();
+        }
       } else if (!userData.verified) {
-        setError('Your account is pending verification. Please wait for an administrator to verify your account.');
+        setError('Account pending verification. Please wait for admin approval.');
       } else {
-        // Store user status in localStorage for the EncryptionInterface to check
         localStorage.setItem('userStatus', userData.status);
         navigate('/encryption-interface');
       }
@@ -55,6 +108,34 @@ const SignIn = () => {
       setError(error.message);
     }
   };
+
+  if (showVerification) {
+    return (
+      <div className="verification-container">
+        <div className="verification-card">
+          <h2>Verify Your Identity</h2>
+          <p>Please enter the verification code sent to {formData.email}</p>
+          
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleVerifyCode}>
+            <input
+              type="text"
+              value={verificationCode}
+              onChange={(e) => setVerificationCode(e.target.value)}
+              placeholder="Enter verification code"
+              required
+            />
+            <button type="submit">Verify</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="signin-container">
@@ -110,4 +191,5 @@ const SignIn = () => {
   );
 };
 
+// Make sure there's only one export and it's properly defined
 export default SignIn;

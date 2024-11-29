@@ -74,9 +74,12 @@ const DashboardStats = () => {
           if (log.operation === 'encrypt') encrypted++;
           if (log.operation === 'decrypt') decrypted++;
           
-          // Count algorithm usage
-          if (log.algorithm === 'aes') aesCount++;
-          if (log.algorithm === 'caesar') caesarCount++;
+          // Update algorithm usage counting
+          if (log.algorithm === 'aes') {
+            aesCount++;
+          } else if (log.algorithm === 'caesar') {
+            caesarCount++;
+          }
           
           // Process user growth (by date)
           const date = new Date(log.timestamp.toDate()).toISOString().split('T')[0];
@@ -87,14 +90,16 @@ const DashboardStats = () => {
           activeUsersMap.set(dayOfWeek, (activeUsersMap.get(dayOfWeek) || 0) + 1);
         });
 
-        setStats({
+        // Ensure we're setting all stats
+        setStats(prevStats => ({
+          ...prevStats,
           totalUsers,
           encryptedMessages: encrypted,
           decryptedMessages: decrypted,
-          userGrowth: Array.from(userGrowthMap).slice(-6),
+          userGrowth: Array.from(userGrowthMap).slice(-30), // Last 30 days
           activeUsers: Array.from(activeUsersMap),
           algorithmUsage: { aes: aesCount, caesar: caesarCount }
-        });
+        }));
 
       } catch (error) {
         console.error('Error fetching stats:', error);
