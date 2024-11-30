@@ -30,6 +30,17 @@ const SignUp = () => {
     e.preventDefault();
 
     if (!captchaToken) {
+      await logSecurityEvent({
+        email: formData.email,
+        action: 'SIGNUP_ATTEMPT_BLOCKED',
+        resource: 'Authentication',
+        details: {
+          error: 'reCAPTCHA verification missing',
+          attemptedEmail: formData.email,
+          severity: 'medium'
+        },
+        timestamp: new Date()
+      });
       alert("Please complete the reCAPTCHA verification");
       return;
     }

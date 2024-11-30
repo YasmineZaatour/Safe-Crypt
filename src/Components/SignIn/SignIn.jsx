@@ -56,6 +56,17 @@ const SignIn = () => {
     setError('');
 
     if (!captchaToken) {
+      await logSecurityEvent({
+        email: formData.email,
+        action: 'LOGIN_ATTEMPT_BLOCKED',
+        resource: 'Authentication',
+        details: {
+          error: 'reCAPTCHA verification missing',
+          attemptedEmail: formData.email,
+          severity: 'medium'
+        },
+        timestamp: new Date()
+      });
       setError('Please complete the reCAPTCHA verification');
       return;
     }
