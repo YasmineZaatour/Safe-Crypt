@@ -3,7 +3,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #a8acbc 0%, #764ba2 100%);
     perspective: 1000px;
   }
   
@@ -117,16 +117,4 @@
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
     20%, 40%, 60%, 80% { transform: translateX(5px); }
-  }
-  
-  /* Add responsive design */
-  @media (max-width: 480px) {
-    .verification-card {
-      padding: 2rem;
-      margin: 1rem;
-    }
-    
-    .verification-card h2 {
-      font-size: 1.5rem;
-    }
   }
