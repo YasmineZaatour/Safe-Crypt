@@ -7,6 +7,7 @@ import './SignIn.css';
 import logSecurityEvent from '../../utils/securityLogger';
 import ReCAPTCHA from "react-google-recaptcha";
 import validatePassword from '../../utils/passwordValidation';
+import validateEmail from '../../utils/emailValidation';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -22,6 +23,7 @@ const SignIn = () => {
   const recaptchaRef = useRef(null);
   const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState('');
+  const [emailError, setEmailError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -56,6 +58,14 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setEmailError('');
+
+    // Validate email before submission
+    const { isValid: isEmailValid, errors: emailErrors } = validateEmail(formData.email);
+    if (!isEmailValid) {
+      setEmailError(emailErrors[0]);
+      return;
+    }
 
     // Basic password validation before submission
     const { isValid, errors } = validatePassword(formData.password);
@@ -221,6 +231,15 @@ const SignIn = () => {
               onChange={handleChange}
               required
             />
+            {emailError && (
+              <div className="email-error" style={{
+                fontSize: '0.8rem',
+                color: '#d32f2f',
+                marginTop: '5px'
+              }}>
+                {emailError}
+              </div>
+            )}
           </div>
           
           <div className="form-group">
