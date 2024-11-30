@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ReCAPTCHA from "react-google-recaptcha";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../../firebase';
 import { getFirestore, doc, setDoc } from "firebase/firestore";
@@ -13,6 +14,8 @@ const SignUp = () => {
     password: '',
     confirmPassword: ''
   });
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
 
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -25,6 +28,12 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!captchaToken) {
+      alert("Please complete the reCAPTCHA verification");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       await logSecurityEvent({
         email: formData.email,
@@ -53,6 +62,10 @@ const SignUp = () => {
 
       navigate("/signin");
     } catch (error) {
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
+      setCaptchaToken(null);
       await logSecurityEvent({
         email: formData.email,
         action: 'SIGNUP_FAILED',
@@ -116,6 +129,15 @@ const SignUp = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               required
+            />
+          </div>
+
+          <div className="recaptcha-container" style={{ margin: '20px 0' }}>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+              onChange={(token) => setCaptchaToken(token)}
+              onExpired={() => setCaptchaToken(null)}
             />
           </div>
           

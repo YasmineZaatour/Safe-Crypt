@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../../firebase';
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import './SignIn.css';
 import logSecurityEvent from '../../utils/securityLogger';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -16,6 +17,8 @@ const SignIn = () => {
   const [error, setError] = useState('');
   const [showVerification, setShowVerification] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
+  const [captchaToken, setCaptchaToken] = useState(null);
+  const recaptchaRef = useRef(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -51,6 +54,12 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!captchaToken) {
+      setError('Please complete the reCAPTCHA verification');
+      return;
+    }
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
@@ -116,6 +125,10 @@ const SignIn = () => {
         navigate('/encryption-interface');
       }
     } catch (error) {
+      if (recaptchaRef.current) {
+        recaptchaRef.current.reset();
+      }
+      setCaptchaToken(null);
       // Modified error logging
       await logSecurityEvent({
         email: formData.email,
@@ -201,6 +214,15 @@ const SignIn = () => {
             />
           </div>
           
+          <div className="recaptcha-container" style={{ margin: '20px 0' }}>
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+              onChange={(token) => setCaptchaToken(token)}
+              onExpired={() => setCaptchaToken(null)}
+            />
+          </div>
+
           <button type="submit" className="signin-button">
             Sign In
           </button>
