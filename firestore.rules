@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // User collection rules
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Security logs rules
+    match /securityLogs/{logId} {
+      // Allow all security log creation (including failed auth attempts)
+      allow create: if true;
+      
+      // Only admins can read logs
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // Prevent updates and deletes
+      allow update, delete: if false;
+    }
+  }
+}

@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from '../../firebase';
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import './SignIn.css';
+import logSecurityEvent from '../../utils/securityLogger';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -53,6 +54,16 @@ const SignIn = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
+      
+      // Log successful login
+      await logSecurityEvent({
+        userId: user.uid,
+        email: user.email,
+        action: 'LOGIN',
+        resource: 'Authentication',
+        details: { success: true }
+      });
+
       const db = getFirestore();
       const userDocRef = doc(db, "users", user.uid);
       const userDoc = await getDoc(userDocRef);
@@ -105,6 +116,18 @@ const SignIn = () => {
         navigate('/encryption-interface');
       }
     } catch (error) {
+      // Modified error logging
+      await logSecurityEvent({
+        email: formData.email,
+        action: 'LOGIN_FAILED',
+        resource: 'Authentication',
+        details: {
+          error: error.message,
+          errorCode: error.code || 'unknown',
+          attemptedEmail: formData.email
+        },
+        timestamp: new Date() // Add explicit timestamp
+      });
       setError(error.message);
     }
   };

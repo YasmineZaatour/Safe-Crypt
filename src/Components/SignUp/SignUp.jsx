@@ -4,6 +4,7 @@ import { auth } from '../../firebase';
 import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { useNavigate } from 'react-router-dom';
 import './SignUp.css';
+import logSecurityEvent from '../../utils/securityLogger';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -25,6 +26,16 @@ const SignUp = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
+      await logSecurityEvent({
+        email: formData.email,
+        action: 'SIGNUP_FAILED',
+        resource: 'Authentication',
+        details: {
+          error: 'Password mismatch',
+          attemptedEmail: formData.email
+        },
+        timestamp: new Date() // Add explicit timestamp
+      });
       alert("Passwords do not match");
       return;
     }
@@ -42,6 +53,17 @@ const SignUp = () => {
 
       navigate("/signin");
     } catch (error) {
+      await logSecurityEvent({
+        email: formData.email,
+        action: 'SIGNUP_FAILED',
+        resource: 'Authentication',
+        details: {
+          error: error.message,
+          errorCode: error.code || 'unknown',
+          attemptedEmail: formData.email
+        },
+        timestamp: new Date() // Add explicit timestamp
+      });
       alert(error.message);
     }
   };

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, getDocs, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '../../firebase';
+import logSecurityEvent from '../../utils/securityLogger';
 import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions,
@@ -49,7 +50,6 @@ const UserManagement = () => {
         newUser.password
       );
 
-      // Add user to Firestore
       await setDoc(doc(db, 'users', userCredential.user.uid), {
         email: newUser.email,
         role: newUser.role,
@@ -57,8 +57,21 @@ const UserManagement = () => {
         createdAt: new Date()
       });
 
+      // Log user creation
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: 'USER_CREATED',
+        resource: 'User Management',
+        details: {
+          newUserEmail: newUser.email,
+          newUserRole: newUser.role,
+          newUserId: userCredential.user.uid
+        }
+      });
+
       setOpenDialog(false);
-      fetchUsers(); // Refresh user list
+      fetchUsers();
       setNewUser({ email: '', role: 'user', password: '' });
     } catch (error) {
       console.error('Error adding user:', error);
@@ -66,11 +79,23 @@ const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteUser = async (userId, userEmail) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
         await deleteDoc(doc(db, 'users', userId));
-        // Note: This doesn't delete the auth user, only the Firestore document
+        
+        // Log user deletion
+        await logSecurityEvent({
+          userId: auth.currentUser?.uid,
+          email: auth.currentUser?.email,
+          action: 'USER_DELETED',
+          resource: 'User Management',
+          details: {
+            deletedUserId: userId,
+            deletedUserEmail: userEmail
+          }
+        });
+
         fetchUsers(); // Refresh user list
       } catch (error) {
         console.error('Error deleting user:', error);
@@ -84,6 +109,13 @@ const UserManagement = () => {
       await updateDoc(doc(db, 'users', userId), {
         role: newRole
       });
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: 'UPDATE_USER_ROLE',
+        resource: 'User Management',
+        details: { targetUserId: userId, newRole }
+      });
       fetchUsers(); // Refresh user list
     } catch (error) {
       console.error('Error updating user role:', error);
@@ -96,10 +128,43 @@ const UserManagement = () => {
       await updateDoc(doc(db, 'users', userId), {
         status: newStatus
       });
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: 'UPDATE_USER_STATUS',
+        resource: 'User Management',
+        details: { targetUserId: userId, newStatus }
+      });
       fetchUsers();
     } catch (error) {
       console.error('Error updating user status:', error);
       alert('Error updating user status: ' + error.message);
+    }
+  };
+
+  const handleVerifyUser = async (userId, userEmail, newVerificationStatus) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        verified: newVerificationStatus
+      });
+
+      // Log verification status change
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: newVerificationStatus ? 'USER_VERIFIED' : 'USER_UNVERIFIED',
+        resource: 'User Management',
+        details: {
+          targetUserId: userId,
+          targetUserEmail: userEmail,
+          newStatus: newVerificationStatus
+        }
+      });
+
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating user verification:', error);
+      alert('Error updating user verification status: ' + error.message);
     }
   };
 
@@ -160,12 +225,7 @@ const UserManagement = () => {
                     variant={user.verified ? "contained" : "outlined"}
                     color={user.verified ? "success" : "warning"}
                     size="small"
-                    onClick={async () => {
-                      await updateDoc(doc(db, 'users', user.id), {
-                        verified: !user.verified
-                      });
-                      fetchUsers();
-                    }}
+                    onClick={() => handleVerifyUser(user.id, user.email, !user.verified)}
                   >
                     {user.verified ? "Verified" : "Verify User"}
                   </Button>
@@ -175,7 +235,7 @@ const UserManagement = () => {
                   <Button 
                     color="error" 
                     size="small"
-                    onClick={() => handleDeleteUser(user.id)}
+                    onClick={() => handleDeleteUser(user.id, user.email)}
                   >
                     Delete
                   </Button>

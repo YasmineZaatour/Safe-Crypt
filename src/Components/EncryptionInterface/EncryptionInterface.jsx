@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import CryptoJS from 'crypto-js';
 import { auth, db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import logSecurityEvent from '../../utils/securityLogger';
 
 const EncryptionInterface = () => {
   const [message, setMessage] = useState('');
@@ -142,6 +143,32 @@ const EncryptionInterface = () => {
     }
 
     setResult(processedMessage);
+
+    try {
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: isEncrypting ? 'ENCRYPT' : 'DECRYPT',
+        resource: 'Encryption Interface',
+        details: {
+          algorithm: encryptionType,
+          aesType: encryptionType === 'aes' ? aesType : null,
+          success: true
+        }
+      });
+
+    } catch (error) {
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: isEncrypting ? 'ENCRYPT_FAILED' : 'DECRYPT_FAILED',
+        resource: 'Encryption Interface',
+        details: {
+          algorithm: encryptionType,
+          error: error.message
+        }
+      });
+    }
   };
 
   return (
