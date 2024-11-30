@@ -6,6 +6,7 @@ import { getFirestore, doc, setDoc } from "firebase/firestore";
 import { useNavigate } from 'react-router-dom';
 import './SignUp.css';
 import logSecurityEvent from '../../utils/securityLogger';
+import  validatePassword from '../../utils/passwordValidation';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const SignUp = () => {
   });
   const [captchaToken, setCaptchaToken] = useState(null);
   const recaptchaRef = useRef(null);
+  const [passwordErrors, setPasswordErrors] = useState([]);
 
   const navigate = useNavigate(); // Initialize useNavigate
 
@@ -24,10 +26,23 @@ const SignUp = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+
+    // Validate password as user types
+    if (e.target.name === 'password') {
+      const { errors } = validatePassword(e.target.value);
+      setPasswordErrors(errors);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate password before submission
+    const { isValid, errors } = validatePassword(formData.password);
+    if (!isValid) {
+      alert(errors.join('\n'));
+      return;
+    }
 
     if (!captchaToken) {
       await logSecurityEvent({
@@ -130,6 +145,17 @@ const SignUp = () => {
               onChange={handleChange}
               required
             />
+            {passwordErrors.length > 0 && (
+              <div className="password-requirements" style={{
+                fontSize: '0.8rem',
+                color: '#d32f2f',
+                marginTop: '5px'
+              }}>
+                {passwordErrors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="form-group">

@@ -6,6 +6,7 @@ import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "firebase/
 import './SignIn.css';
 import logSecurityEvent from '../../utils/securityLogger';
 import ReCAPTCHA from "react-google-recaptcha";
+import validatePassword from '../../utils/passwordValidation';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -20,6 +21,7 @@ const SignIn = () => {
   const [captchaToken, setCaptchaToken] = useState(null);
   const recaptchaRef = useRef(null);
   const navigate = useNavigate();
+  const [passwordError, setPasswordError] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -54,6 +56,13 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Basic password validation before submission
+    const { isValid, errors } = validatePassword(formData.password);
+    if (!isValid) {
+      setPasswordError(errors[0]); // Show first error
+      return;
+    }
 
     if (!captchaToken) {
       await logSecurityEvent({
@@ -223,6 +232,15 @@ const SignIn = () => {
               onChange={handleChange}
               required
             />
+            {passwordError && (
+              <div className="password-error" style={{
+                fontSize: '0.8rem',
+                color: '#d32f2f',
+                marginTop: '5px'
+              }}>
+                {passwordError}
+              </div>
+            )}
           </div>
           
           <div className="recaptcha-container" style={{ margin: '20px 0' }}>
