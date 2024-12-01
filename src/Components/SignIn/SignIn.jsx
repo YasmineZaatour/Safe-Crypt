@@ -8,6 +8,7 @@ import logSecurityEvent from '../../utils/securityLogger';
 import ReCAPTCHA from "react-google-recaptcha";
 import validatePassword from '../../utils/passwordValidation';
 import validateEmail from '../../utils/emailValidation';
+import LoginAttemptTracker from '../../utils/loginAttempts';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
@@ -24,6 +25,7 @@ const SignIn = () => {
   const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [blockTimeRemaining, setBlockTimeRemaining] = useState(0);
 
   const handleChange = (e) => {
     setFormData({
@@ -55,10 +57,24 @@ const SignIn = () => {
     }
   };
 
+  const formatRemainingTime = (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setEmailError('');
+
+    // Check if user is blocked
+    if (LoginAttemptTracker.isBlocked(formData.email)) {
+      const remainingTime = LoginAttemptTracker.getRemainingBlockTime(formData.email);
+      setBlockTimeRemaining(remainingTime);
+      setError(`Account temporarily blocked. Try again in ${formatRemainingTime(remainingTime)}`);
+      return;
+    }
 
     // Validate email before submission
     const { isValid: isEmailValid, errors: emailErrors } = validateEmail(formData.email);
@@ -94,6 +110,9 @@ const SignIn = () => {
       const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
       const user = userCredential.user;
       
+      // Reset login attempts on successful login
+      LoginAttemptTracker.resetAttempts(formData.email);
+
       // Log successful login
       await logSecurityEvent({
         userId: user.uid,
@@ -155,6 +174,31 @@ const SignIn = () => {
         navigate('/encryption-interface');
       }
     } catch (error) {
+      // Record failed attempt and check if account should be blocked
+      const canRetry = LoginAttemptTracker.recordAttempt(formData.email);
+      
+      if (!canRetry) {
+        const remainingTime = LoginAttemptTracker.getRemainingBlockTime(formData.email);
+        setBlockTimeRemaining(remainingTime);
+        setError(`Too many failed attempts. Account blocked for ${formatRemainingTime(remainingTime)}`);
+        
+        // Start a timer to update the remaining time
+        const timer = setInterval(() => {
+          const remaining = LoginAttemptTracker.getRemainingBlockTime(formData.email);
+          if (remaining <= 0) {
+            clearInterval(timer);
+            setBlockTimeRemaining(0);
+            setError('');
+          } else {
+            setBlockTimeRemaining(remaining);
+            setError(`Too many failed attempts. Account blocked for ${formatRemainingTime(remaining)}`);
+          }
+        }, 1000);
+
+        // Clean up timer
+        return () => clearInterval(timer);
+      }
+
       if (recaptchaRef.current) {
         recaptchaRef.current.reset();
       }
