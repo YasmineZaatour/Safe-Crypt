@@ -70,11 +70,18 @@ const SecurityLogs = () => {
   const getActionColor = (action) => {
     switch (action) {
       case 'LOGIN_FAILED':
-        return 'error';
       case 'SIGNUP_FAILED':
+      case 'SECRET_CREATION_FAILED':
+      case 'SECRET_ACCESS_FAILED':
+      case 'SECRET_DELETION_FAILED':
         return 'error';
       case 'LOGIN':
+      case 'SECRET_CREATED':
         return 'success';
+      case 'SECRET_ACCESSED':
+        return 'info';
+      case 'SECRET_DELETED':
+        return 'warning';
       default:
         return 'default';
     }
@@ -89,16 +96,29 @@ const SecurityLogs = () => {
           <Typography color="error" variant="body2">
             Error: {details.error}
           </Typography>
-          {details.attemptedEmail && (
+          {details.secretName && (
             <Typography variant="body2">
-              Attempted Email: {details.attemptedEmail}
+              Secret Name: {details.secretName}
             </Typography>
           )}
-          {details.timestamp && (
-            <Typography variant="body2" color="textSecondary">
-              Time: {new Date(details.timestamp).toLocaleString()}
+          {details.secretId && (
+            <Typography variant="body2">
+              Secret ID: {details.secretId}
             </Typography>
           )}
+        </Box>
+      );
+    }
+
+    if (details.secretName) {
+      return (
+        <Box>
+          <Typography variant="body2">
+            Secret Name: {details.secretName}
+          </Typography>
+          <Typography variant="body2" color="textSecondary">
+            Secret ID: {details.secretId}
+          </Typography>
         </Box>
       );
     }

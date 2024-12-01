@@ -5,9 +5,10 @@ import {
   TableHead, TableRow, Paper, IconButton, Tooltip, CircularProgress
 } from '@mui/material';
 import { Add as AddIcon, Visibility as VisibilityIcon, Delete as DeleteIcon } from '@mui/icons-material';
-import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { db } from '../../firebase';
+import { collection, addDoc, query, orderBy, getDocs, deleteDoc, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { db, auth } from '../../firebase';
 import { encryptSecret, decryptSecret } from '../../utils/encryption';
+import logActivity from '../../utils/logUtils';
 
 const KeyVault = () => {
   const [secrets, setSecrets] = useState([]);
@@ -41,19 +42,43 @@ const KeyVault = () => {
   }, []);
 
   const handleAddSecret = async () => {
+    if (!formData.name || !formData.value) {
+      console.error('Name and value are required');
+      return;
+    }
+
     try {
+      const user = auth.currentUser;
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const userData = userDoc.data();
+
+      if (userData.role !== 'admin') {
+        throw new Error('Only admins can create secrets');
+      }
+
       const encryptedValue = encryptSecret(formData.value);
-      await addDoc(collection(db, 'secrets'), {
+      const docRef = await addDoc(collection(db, 'secrets'), {
         name: formData.name,
         value: encryptedValue,
         createdAt: new Date(),
         lastAccessed: new Date()
       });
+
+      await logActivity(
+        'SECRET_CREATED',
+        'KeyVault',
+        {
+          secretName: formData.name,
+          secretId: docRef.id
+        }
+      );
+
       setOpenDialog(false);
       setFormData({ name: '', value: '' });
       fetchSecrets();
     } catch (error) {
       console.error('Error adding secret:', error);
+      await logActivity('SECRET_CREATION_FAILED', 'KeyVault', { error: error.message });
     }
   };
 
@@ -64,21 +89,48 @@ const KeyVault = () => {
       setSelectedSecret(secret);
       setViewSecretDialog(true);
 
-      // Update last accessed timestamp
       await updateDoc(doc(db, 'secrets', secret.id), {
         lastAccessed: new Date()
       });
+
+      await logActivity(
+        'SECRET_ACCESSED',
+        'KeyVault',
+        {
+          secretName: secret.name,
+          secretId: secret.id
+        }
+      );
     } catch (error) {
       console.error('Error decrypting secret:', error);
+      await logActivity('SECRET_ACCESS_FAILED', 'KeyVault', { 
+        error: error.message,
+        secretId: secret.id 
+      });
     }
   };
 
   const handleDeleteSecret = async (secretId) => {
     try {
+      const secretToDelete = secrets.find(s => s.id === secretId);
       await deleteDoc(doc(db, 'secrets', secretId));
+      
+      await logActivity(
+        'SECRET_DELETED',
+        'KeyVault',
+        {
+          secretName: secretToDelete.name,
+          secretId: secretId
+        }
+      );
+
       fetchSecrets();
     } catch (error) {
       console.error('Error deleting secret:', error);
+      await logActivity('SECRET_DELETION_FAILED', 'KeyVault', { 
+        error: error.message,
+        secretId: secretId 
+      });
     }
   };
 
@@ -129,7 +181,6 @@ const KeyVault = () => {
         </Table>
       </TableContainer>
 
-      {/* Add View Secret Dialog */}
       <Dialog 
         open={viewSecretDialog} 
         onClose={() => setViewSecretDialog(false)}
