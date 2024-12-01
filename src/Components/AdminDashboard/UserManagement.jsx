@@ -168,6 +168,32 @@ const UserManagement = () => {
     }
   };
 
+  const renderStatusCell = (user) => {
+    if (user.role === 'admin') {
+      return (
+        <Select
+          value="active"
+          size="small"
+          disabled
+        >
+          <MenuItem value="active">Active</MenuItem>
+        </Select>
+      );
+    }
+
+    return (
+      <Select
+        value={user.status || 'active'}
+        size="small"
+        onChange={(e) => handleUpdateUserStatus(user.id, e.target.value)}
+      >
+        <MenuItem value="active">Active</MenuItem>
+        <MenuItem value="suspended">Suspended</MenuItem>
+        <MenuItem value="inactive">Inactive</MenuItem>
+      </Select>
+    );
+  };
+
   if (loading) {
     return <CircularProgress />;
   }
@@ -210,15 +236,7 @@ const UserManagement = () => {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <Select
-                    value={user.status || 'active'}
-                    size="small"
-                    onChange={(e) => handleUpdateUserStatus(user.id, e.target.value)}
-                  >
-                    <MenuItem value="active">Active</MenuItem>
-                    <MenuItem value="suspended">Suspended</MenuItem>
-                    <MenuItem value="inactive">Inactive</MenuItem>
-                  </Select>
+                  {renderStatusCell(user)}
                 </TableCell>
                 <TableCell>
                   <Button
