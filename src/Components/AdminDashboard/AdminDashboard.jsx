@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import UserManagement from './UserManagement';
 import SecurityLogs from './SecurityLogs';
 import DashboardStats from './DashboardStats';
+import KeyVault from './KeyVault';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -35,12 +36,14 @@ const AdminDashboard = () => {
               <Tab label="Dashboard Overview" />
               <Tab label="User Management" />
               <Tab label="Security Logs" />
+              <Tab label="Key Vault" />
             </Tabs>
 
             <Box sx={{ p: 3 }}>
               {activeTab === 0 && <DashboardStats />}
               {activeTab === 1 && <UserManagement />}
               {activeTab === 2 && <SecurityLogs />}
+              {activeTab === 3 && <KeyVault />}
             </Box>
           </Paper>
         </Box>

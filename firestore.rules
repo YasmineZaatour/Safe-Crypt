@@ -19,5 +19,16 @@ service cloud.firestore {
       // Prevent updates and deletes
       allow update, delete: if false;
     }
+
+    // User Key Management
+    match /keyVault/{keyId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    }
+
+    // Admin Secret Management
+    match /secrets/{secretId} {
+      allow read, write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
   }
 }
