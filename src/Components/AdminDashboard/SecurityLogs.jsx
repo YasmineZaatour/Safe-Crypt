@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Table, TableBody, TableCell, TableContainer,
   TableHead, TableRow, Paper, Typography,
-  CircularProgress, Box, Chip
+  CircularProgress, Box, Chip,Button
 } from '@mui/material';
 import { collection, query, orderBy, limit, getDocs, startAfter } from 'firebase/firestore';
 import { db } from '../../firebase';
@@ -170,6 +170,15 @@ const SecurityLogs = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+        <Button 
+          onClick={loadMoreLogs}
+          disabled={!lastVisible}
+          variant="contained"
+        >
+          Load More
+        </Button>
+      </Box>
     </Paper>
   );
 };

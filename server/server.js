@@ -1,7 +1,7 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
-require('dotenv').config({path:'./server/.env'});
+require('dotenv').config();
 
 const app = express();
 
@@ -14,8 +14,9 @@ const verificationCodes = new Map();
 
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
+    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
     secure: false, // Use TLS
     auth: {
       user: process.env.EMAIL_USER,

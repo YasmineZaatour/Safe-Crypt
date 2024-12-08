@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Tab, Tabs, Typography, Paper, Container, Grid } from '@mui/material';
+import { Box, Tab, Tabs, Typography, Paper, Container } from '@mui/material';
 import { motion } from 'framer-motion';
 import UserManagement from './UserManagement';
 import SecurityLogs from './SecurityLogs';

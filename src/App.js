@@ -1,21 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { auth } from './firebase';
 import SignIn from "./Components/SignIn/SignIn.jsx";
 import SignUp from "./Components/SignUp/SignUp.jsx";
 import AdminDashboard from "./Components/AdminDashboard/AdminDashboard.jsx";
 import EncryptionInterface from "./Components/EncryptionInterface/EncryptionInterface.jsx";
 import AdminVerification from "./Components/AdminVerification/AdminVerification.jsx";
 function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   return (
     <div>
