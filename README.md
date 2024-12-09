@@ -34,7 +34,7 @@ SafeCrypt is a secure encryption and decryption web application that allows user
 ![Security Logs](Photos/SecurityLogs.png)
 
 ### Encrypted Secrets
-![Encrypted Secrets](Photos/EncryptedSecrets.png)
+![Encrypted Secrets](Photos/KeyVault.png)
 
 ### Encryption and Decryption Interface
 ![Encryption and Decryption](Photos/EncryptionInterface.png)
@@ -48,7 +48,6 @@ cd safecrypt
 
 npm install
 
-Set up Firebase
+Set up the environment variables in the .env file
 
-Set up environment variables
 
