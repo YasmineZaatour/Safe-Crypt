@@ -8,4 +8,5 @@ import '@testing-library/jest-dom';
 import dotenv from 'dotenv';
 
 // Load environment variables from .env file
-dotenv.config({ path: '../.env' });
+dotenv.config({ path: './.env' });
+console.log('Firebase API Key:', process.env.REACT_APP_FIREBASE_API_KEY);
