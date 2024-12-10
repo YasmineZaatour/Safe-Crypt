@@ -20,6 +20,13 @@ const EncryptionInterface = () => {
 
   const handleLogout = async () => {
     try {
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: 'LOGOUT',
+        resource: 'Encryption Interface',
+        details: { success: true }
+      });
       await signOut(auth);
       navigate('/signin');
     } catch (error) {
@@ -197,7 +204,7 @@ const EncryptionInterface = () => {
           top: '20px',
           right: '20px',
           padding: '10px 20px',
-          backgroundColor: '#ff4444',
+          backgroundColor: '#4299e1',
           color: 'white',
           border: 'none',
           borderRadius: '4px',

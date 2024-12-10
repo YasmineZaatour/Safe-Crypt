@@ -8,6 +8,7 @@ import UserManagement from './UserManagement';
 import SecurityLogs from './SecurityLogs';
 import DashboardStats from './DashboardStats';
 import KeyVault from './KeyVault';
+import logSecurityEvent from '../../utils/securityLogger';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
@@ -19,6 +20,13 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
+      await logSecurityEvent({
+        userId: auth.currentUser?.uid,
+        email: auth.currentUser?.email,
+        action: 'LOGOUT',
+        resource: 'Admin Dashboard',
+        details: { success: true }
+      });
       await signOut(auth);
       navigate('/signin');
     } catch (error) {
@@ -39,7 +47,7 @@ const AdminDashboard = () => {
           </Typography>
           <Button 
             variant="contained" 
-            color="error" 
+            color="#4299e1" 
             onClick={handleLogout}
             sx={{ zIndex: 1000 }}
           >
