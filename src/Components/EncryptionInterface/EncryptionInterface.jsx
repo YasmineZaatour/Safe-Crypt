@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { signOut } from 'firebase/auth';
 import './EncryptionInterface.css';
 import { motion } from 'framer-motion';
 import CryptoJS from 'crypto-js';
 import { auth, db } from '../../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import logSecurityEvent from '../../utils/securityLogger';
+import { useNavigate } from 'react-router-dom';
 
 const EncryptionInterface = () => {
   const [message, setMessage] = useState('');
@@ -14,6 +16,16 @@ const EncryptionInterface = () => {
   const [aesType, setAesType] = useState('128');
   const [isEncrypting, setIsEncrypting] = useState(true);
   const [isSuspended] = useState(localStorage.getItem('userStatus') === 'suspended');
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/signin');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
 
   const caesarCipherEncrypt = (text, shift) => {
     return Array.from(text).map(char => {
@@ -178,6 +190,24 @@ const EncryptionInterface = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
+      <button
+        onClick={handleLogout}
+        style={{
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          padding: '10px 20px',
+          backgroundColor: '#ff4444',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          zIndex: 1000
+        }}
+      >
+        Logout
+      </button>
+      
       {isSuspended && (
         <div className="suspension-notice" style={{
           backgroundColor: '#fff3cd',
