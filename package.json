@@ -35,9 +35,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "eject": "react-scripts eject",
-    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!@firebase)/\"",
-    "build": "CI=false react-scripts build"
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [
