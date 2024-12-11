@@ -1,4 +1,5 @@
 {
   "appService.defaultWebAppToDeploy": "undefined/subscriptions/61320a00-2db1-4a9d-80bb-933d4e799592/resourceGroups/appsvc_linux_centralus/providers/Microsoft.Web/sites/safecryptapp",
-  "appService.deploySubpath": "."
+  "appService.deploySubpath": ".",
+  "appService.zipIgnorePattern": ["node_modules{,/**}", ".vscode{,/**}"]
 }
