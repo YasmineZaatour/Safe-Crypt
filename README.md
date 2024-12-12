@@ -7,7 +7,7 @@ SafeCrypt is a secure encryption and decryption web application that allows user
 - User authentication (sign up, sign in)
 - AES-256 and Caesar Cipher encryption and decryption
 - Admin dashboard for user management
-- Security logs for tracking user activities
+- Security logs for tracking user and admin activities
 - Email verification for admin users (MFA)
 - Encrypted secrets for storing sensitive information (Key Vault)
 - Role based access control (Admin, User) and user status
